@@ -30,6 +30,12 @@ resource "aws_s3_bucket_public_access_block" "cloudtrail" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_logging" "cloudtrail" {
+  bucket        = aws_s3_bucket.cloudtrail.id
+  target_bucket = aws_s3_bucket.cloudtrail.id
+  target_prefix = "access-logs/"
+}
+
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket_policy" "cloudtrail" {
@@ -41,24 +47,18 @@ resource "aws_s3_bucket_policy" "cloudtrail" {
       {
         Sid    = "AWSCloudTrailAclCheck"
         Effect = "Allow"
-        Principal = {
-          Service = "cloudtrail.amazonaws.com"
-        }
+        Principal = { Service = "cloudtrail.amazonaws.com" }
         Action   = "s3:GetBucketAcl"
         Resource = aws_s3_bucket.cloudtrail.arn
       },
       {
         Sid    = "AWSCloudTrailWrite"
         Effect = "Allow"
-        Principal = {
-          Service = "cloudtrail.amazonaws.com"
-        }
+        Principal = { Service = "cloudtrail.amazonaws.com" }
         Action   = "s3:PutObject"
         Resource = "${aws_s3_bucket.cloudtrail.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
         Condition = {
-          StringEquals = {
-            "s3:x-amz-acl" = "bucket-owner-full-control"
-          }
+          StringEquals = { "s3:x-amz-acl" = "bucket-owner-full-control" }
         }
       }
     ]
@@ -105,6 +105,13 @@ resource "aws_s3_bucket" "config" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_versioning" "config" {
+  bucket = aws_s3_bucket.config.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "config" {
   bucket                  = aws_s3_bucket.config.id
   block_public_acls       = true
@@ -120,6 +127,12 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "config" {
       sse_algorithm = "AES256"
     }
   }
+}
+
+resource "aws_s3_bucket_logging" "config" {
+  bucket        = aws_s3_bucket.config.id
+  target_bucket = aws_s3_bucket.cloudtrail.id
+  target_prefix = "config-access-logs/"
 }
 
 resource "aws_iam_role" "config" {
@@ -194,50 +207,41 @@ resource "aws_config_configuration_recorder_status" "this" {
 # -------------------------------------------------------
 resource "aws_config_config_rule" "s3_public_access" {
   name = "s3-bucket-public-access-prohibited"
-
   source {
     owner             = "AWS"
     source_identifier = "S3_BUCKET_PUBLIC_READ_PROHIBITED"
   }
-
   depends_on = [aws_config_configuration_recorder_status.this]
 }
 
 resource "aws_config_config_rule" "encryption_at_rest" {
   name = "dynamodb-encryption-enabled"
-
   source {
     owner             = "AWS"
     source_identifier = "DYNAMODB_TABLE_ENCRYPTED_AT_REST"
   }
-
   depends_on = [aws_config_configuration_recorder_status.this]
 }
 
 resource "aws_config_config_rule" "required_tags" {
   name = "required-tags"
-
   source {
     owner             = "AWS"
     source_identifier = "REQUIRED_TAGS"
   }
-
   input_parameters = jsonencode({
     tag1Key = "Project"
     tag2Key = "ManagedBy"
     tag3Key = "Environment"
   })
-
   depends_on = [aws_config_configuration_recorder_status.this]
 }
 
 resource "aws_config_config_rule" "cloudtrail_enabled" {
   name = "cloudtrail-enabled"
-
   source {
     owner             = "AWS"
     source_identifier = "CLOUD_TRAIL_ENABLED"
   }
-
   depends_on = [aws_config_configuration_recorder_status.this]
 }

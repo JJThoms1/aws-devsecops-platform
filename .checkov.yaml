@@ -1,0 +1,20 @@
+skip-check:
+  # KMS encryption for ECR requires a customer-managed key which incurs
+  # additional cost. AES256 encryption is enabled. Acceptable for portfolio.
+  - CKV_AWS_136
+
+  # KMS CMK for DynamoDB requires additional cost. AWS-managed encryption
+  # is enabled via server_side_encryption block. Acceptable for portfolio.
+  - CKV_AWS_119
+
+  # KMS encryption for S3 requires additional cost. AES256 server-side
+  # encryption is enabled on all buckets. Acceptable for portfolio.
+  - CKV_AWS_145
+
+  # SNS topic encryption with KMS requires additional cost. Topic is used
+  # only for internal budget and alarm notifications. Acceptable for portfolio.
+  - CKV_AWS_26
+
+  # API Gateway request validation is intentionally skipped for this simple
+  # CRUD API. Input validation is handled at the Lambda layer.
+  - CKV2_AWS_53
