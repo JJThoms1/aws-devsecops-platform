@@ -93,7 +93,7 @@ resource "aws_securityhub_standards_subscription" "aws_foundational" {
 }
 
 resource "aws_securityhub_standards_subscription" "cis" {
-  standards_arn = "arn:aws:securityhub:${var.aws_region}::standards/cis-aws-foundations-benchmark/v/1.2.0"
+  standards_arn = "arn:aws:securityhub:${var.aws_region}::standards/cis-aws-foundations-benchmark/v/1.4.0"
   depends_on    = [aws_securityhub_account.this]
 }
 
@@ -218,7 +218,7 @@ resource "aws_config_config_rule" "encryption_at_rest" {
   name = "dynamodb-encryption-enabled"
   source {
     owner             = "AWS"
-    source_identifier = "DYNAMODB_TABLE_ENCRYPTED_AT_REST"
+    source_identifier = "DYNAMODB_TABLE_ENCRYPTION_ENABLED"
   }
   depends_on = [aws_config_configuration_recorder_status.this]
 }

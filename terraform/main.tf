@@ -126,7 +126,6 @@ resource "aws_lambda_function" "app" {
   environment {
     variables = {
       DYNAMODB_TABLE = aws_dynamodb_table.this.name
-      AWS_REGION     = var.aws_region
       ENVIRONMENT    = var.environment
     }
   }
@@ -202,10 +201,7 @@ resource "aws_api_gateway_stage" "this" {
   rest_api_id   = aws_api_gateway_rest_api.this.id
   stage_name    = var.environment
 
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.api_gateway.arn
-    format         = "$context.requestId"
-  }
+  depends_on = [aws_api_gateway_account.this]
 }
 
 resource "aws_cloudwatch_log_group" "api_gateway" {
@@ -219,4 +215,29 @@ resource "aws_lambda_permission" "api_gateway" {
   function_name = aws_lambda_function.app.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.this.execution_arn}/*/*"
+}
+
+# -------------------------------------------------------
+# API GATEWAY CLOUDWATCH ROLE
+# -------------------------------------------------------
+resource "aws_iam_role" "api_gateway_cloudwatch" {
+  name = "${var.project_name}-apigw-cloudwatch-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "apigateway.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch" {
+  role       = aws_iam_role.api_gateway_cloudwatch.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+}
+
+resource "aws_api_gateway_account" "this" {
+  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
 }

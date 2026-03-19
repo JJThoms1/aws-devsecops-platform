@@ -4,7 +4,7 @@ import boto3
 import uuid
 from datetime import datetime
 
-dynamodb = boto3.resource('dynamodb', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table(os.environ.get('DYNAMODB_TABLE', 'devsecops-items'))
 
 def handler(event, context):

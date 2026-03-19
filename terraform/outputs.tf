@@ -1,6 +1,6 @@
 output "api_endpoint" {
   description = "API Gateway endpoint URL"
-  value       = "${aws_api_gateway_deployment.this.invoke_url}${aws_api_gateway_stage.this.stage_name}"
+  value       = "https://${aws_api_gateway_rest_api.this.id}.execute-api.${var.aws_region}.amazonaws.com/${aws_api_gateway_stage.this.stage_name}"
 }
 
 output "lambda_function_name" {
