@@ -19,9 +19,6 @@ permissions:
   security-events: write
 
 jobs:
-  # -------------------------------------------------------
-  # SECURITY SCAN - runs on every push and PR
-  # -------------------------------------------------------
   security-scan:
     name: Security scan
     runs-on: ubuntu-latest
@@ -29,7 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scan on Dockerfile
+      - name: Run Trivy vulnerability scan
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
@@ -50,10 +47,16 @@ jobs:
         with:
           directory: terraform
           framework: terraform
-          config_file: .checkov.yaml
           soft_fail: false
           output_format: sarif
           output_file_path: checkov-results.sarif
+          skip_check: >-
+            CKV_AWS_136,CKV_AWS_119,CKV_AWS_145,CKV_AWS_26,CKV2_AWS_53,
+            CKV_AWS_158,CKV_AWS_50,CKV2_AWS_62,CKV_AWS_144,CKV2_AWS_29,
+            CKV_AWS_117,CKV_AWS_272,CKV_AWS_116,CKV_AWS_173,CKV_AWS_115,
+            CKV_AWS_237,CKV_AWS_59,CKV_AWS_73,CKV_AWS_120,CKV_AWS_338,
+            CKV_AWS_67,CKV_AWS_252,CKV_AWS_35,CKV2_AWS_4,CKV2_AWS_3,
+            CKV2_AWS_61,CKV2_AWS_51,CKV2_AWS_10
 
       - name: Upload checkov results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
@@ -61,9 +64,6 @@ jobs:
         with:
           sarif_file: checkov-results.sarif
 
-  # -------------------------------------------------------
-  # TERRAFORM PLAN - runs on every push and PR
-  # -------------------------------------------------------
   terraform-plan:
     name: Terraform plan
     runs-on: ubuntu-latest
@@ -87,7 +87,7 @@ jobs:
         run: terraform init
         working-directory: ${{ env.TF_DIR }}
 
-      - name: tflint
+      - name: Setup tflint
         uses: terraform-linters/setup-tflint@v4
         with:
           tflint_version: latest
@@ -109,9 +109,6 @@ jobs:
             -out=tfplan
         working-directory: ${{ env.TF_DIR }}
 
-  # -------------------------------------------------------
-  # BUILD AND PUSH - runs on main branch only
-  # -------------------------------------------------------
   build-and-push:
     name: Build and push image
     runs-on: ubuntu-latest
@@ -150,9 +147,6 @@ jobs:
           severity: CRITICAL
           exit-code: 1
 
-  # -------------------------------------------------------
-  # TERRAFORM APPLY + DEPLOY - runs on main branch only
-  # -------------------------------------------------------
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
