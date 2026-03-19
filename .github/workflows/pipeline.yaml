@@ -195,7 +195,7 @@ jobs:
 
       - name: Verify deployment
         run: |
-          API_URL=$(cd terraform && terraform output -raw api_endpoint)
+          API_URL=$(terraform output -raw api_endpoint)
           curl -f "$API_URL/health" || exit 1
           echo "Deployment verified successfully"
         working-directory: ${{ env.TF_DIR }}
