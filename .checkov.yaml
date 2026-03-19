@@ -18,3 +18,23 @@ skip-check:
   # API Gateway request validation is intentionally skipped for this simple
   # CRUD API. Input validation is handled at the Lambda layer.
   - CKV2_AWS_53
+
+  # CloudWatch Log Group KMS encryption requires additional cost. Log groups
+  # have 30-day retention. AES256 encryption acceptable for portfolio.
+  - CKV_AWS_158
+
+  # X-Ray tracing adds cost per request. CloudWatch alarms and logs provide
+  # sufficient observability for this portfolio project.
+  - CKV_AWS_50
+
+  # S3 event notifications not required for CloudTrail and Config buckets.
+  # These are write-only audit buckets, not event-driven pipelines.
+  - CKV2_AWS_62
+
+  # Cross-region replication adds significant cost. Single-region deployment
+  # is intentional for this portfolio project.
+  - CKV_AWS_144
+
+  # WAF protection adds $5/month minimum cost. API is a portfolio demo with
+  # no sensitive data. Acceptable trade-off for this project.
+  - CKV2_AWS_29
